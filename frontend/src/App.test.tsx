@@ -6,6 +6,8 @@ describe("God's Eye application shell", () => {
   it("renders the application title", () => {
     render(<App />);
 
-    expect(screen.getByRole("heading", { name: "GOD'S EYE" })).toBeTruthy();
+    expect(
+      screen.getByRole("heading", { name: "GOD'S EYE", level: 1 })
+    ).toBeTruthy();
   });
 });
