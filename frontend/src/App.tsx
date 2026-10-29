@@ -1,9 +1,42 @@
-import { useEffect, useState, type MouseEvent } from "react";
+import { useEffect, useRef, useState, type MouseEvent } from "react";
 const modes = ["Explore", "Space", "Flights", "Marine"] as const;
+const modeDescriptions = {
+  Explore: "Global situational overview",
+  Space: "Satellite telemetry",
+  Flights: "Aircraft tracking",
+  Marine: "Maritime vessel tracking",
+} as const;
 
 function App() {
-  const [activeMode, setActiveMode] = useState<(typeof modes)[number]>("Explore");
+  const [activeMode, setActiveMode] =
+    useState<(typeof modes)[number]>("Explore");
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [currentTime, setCurrentTime] = useState(() => new Date());
+
+  useEffect(() => {
+    if (!isMenuOpen) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setIsMenuOpen(false);
+      }
+    };
+
+    const handleOutsideClick = (event: PointerEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("pointerdown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("pointerdown", handleOutsideClick);
+    };
+  }, [isMenuOpen]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -65,9 +98,45 @@ function App() {
           ))}
         </nav>
 
-        <div className="system-status">
-          <span className="status-dot" />
-          <span>SYSTEM ONLINE</span>
+        <div className="topbar-actions" ref={menuRef}>
+          <div className="system-status">
+            <span className="status-dot" />
+            <span>SYSTEM ONLINE</span>
+          </div>
+
+          <button
+            className="menu-button glass-interactive"
+            type="button"
+            aria-label="Open application menu"
+            aria-expanded={isMenuOpen}
+            aria-controls="application-menu"
+            onClick={() => setIsMenuOpen((previous) => !previous)}
+          >
+            <span />
+            <span />
+            <span />
+            <span />
+          </button>
+
+          {isMenuOpen && (
+            <div
+              id="application-menu"
+              className="application-menu glass"
+              role="region"
+              aria-label="Application controls"
+            >
+              <div className="menu-heading">
+                <span>CONTROL CENTER</span>
+                <span className="menu-version">v0.0.1</span>
+              </div>
+
+              <div className="menu-section">
+                <span className="menu-section-label">SYSTEM</span>
+                <p>God's Eye interface preview</p>
+                <p>Live telemetry integration coming soon.</p>
+              </div>
+            </div>
+          )}
         </div>
       </header>
 
@@ -124,9 +193,51 @@ function App() {
 
           <span>EXPLORE EARTH</span>
         </div>
-
       </section>
-      
+
+      {/* MOBILE TELEMETRY PANEL */}
+      <aside
+        className="mobile-telemetry-panel glass"
+        aria-label="Telemetry overview"
+      >
+        <div className="telemetry-panel-header">
+          <div>
+            <span className="telemetry-panel-label">TELEMETRY</span>
+            <h3>{activeMode.toUpperCase()}</h3>
+          </div>
+
+          <span className="telemetry-preview-status">PREVIEW</span>
+        </div>
+
+        <p className="telemetry-panel-description">
+          {modeDescriptions[activeMode]}
+        </p>
+
+        <div className="telemetry-panel-footer">
+          <span>DATA SOURCE</span>
+          <strong>NOT CONNECTED</strong>
+        </div>
+      </aside>
+
+      {/* MOBILE MODE NAVIGATION */}
+      <nav
+        className="mobile-mode-dock glass"
+        aria-label="Mobile operational modes"
+      >
+        {modes.map((mode) => (
+          <button
+            key={mode}
+            type="button"
+            className={`mobile-mode-button glass-interactive ${
+              activeMode === mode ? "mobile-mode-button-active" : ""
+            }`}
+            aria-current={activeMode === mode ? "page" : undefined}
+            onClick={() => setActiveMode(mode)}
+          >
+            <span>{mode}</span>
+          </button>
+        ))}
+      </nav>
     </main>
   );
 }
